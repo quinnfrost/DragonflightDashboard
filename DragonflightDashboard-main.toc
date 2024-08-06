@@ -5,4 +5,4 @@
 ## Author: quinnfrost, Elektrode (Grizzly Hills / Lothar)
 ## SavedVariablesPerCharacter: DragonDash_Global_Settings
 
-DragonflightDashboard.lua
+DragonflightDashboard-main.lua

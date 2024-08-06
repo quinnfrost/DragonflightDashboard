@@ -42,7 +42,7 @@ end
 
 -- from addon SpeedO with api fixed
 function Dash_InitFrame()
-    isValid = Font:SetFont("Interface\\addons\\dragonflight-dashboard\\DejaVuSansMono-Bold.ttf", 12, "")
+    isValid = Font:SetFont("Interface\\addons\\DragonflightDashboard-main\\DejaVuSansMono-Bold.ttf", 12, "")
     Font:SetShadowColor(0, 0, 0)
     Font:SetShadowOffset(2, -2)
     Font:SetTextColor(0.75, 0.75, 0)
