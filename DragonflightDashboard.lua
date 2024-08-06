@@ -63,6 +63,8 @@ function Dash_InitFrame()
     MainFrame:EnableMouse(true)
     MainFrame:SetMovable(true)
     MainFrame.LastUpdate = 0
+    MainFrame.LastSpeed = 0
+    MainFrame.LastYaw = 0
     MainFrame.UpdateInterval = .1
     MainFrame.VarsLoaded = false
     if DragonDash_Global_Settings.Vertical == true then
@@ -95,6 +97,7 @@ function Dash_OnUpdate(Self, Elapsed)
     if varLoaded == true and hasInit == true then
         MainFrame.LastUpdate = MainFrame.LastUpdate + Elapsed
         if (MainFrame.LastUpdate > MainFrame.UpdateInterval) then
+            local interval = MainFrame.LastUpdate
             MainFrame.LastUpdate = 0
 
             -- raw data variables
@@ -132,11 +135,20 @@ function Dash_OnUpdate(Self, Elapsed)
             MapX = PositionX * 100                         -- convert map coordinates to whole numbers 1-100
             MapY = PositionY * 100                         -- convert map coordinates to whole numbers 1-100
 
+            DeltaSpeed = (SpeedPercent - MainFrame.LastSpeed)
+            MainFrame.LastSpeed = SpeedPercent
+
+            DeltaYaw = (HeadDeg - MainFrame.LastYaw) / interval
+            MainFrame.LastYaw = HeadDeg
+
             --round and pad values
             SpeedPercent = format("%3.0f", SpeedPercent)
             MapX = format("%5.1f", MapX)
             MapY = format("%5.1f", MapY)
             HeadDeg = format("%3.0f", HeadDeg)
+
+            DeltaSpeedPercent = format("%2d", DeltaSpeed)
+            DeltaYaw = format("%2d", DeltaYaw)
 
             -- results to display
             local Msg = ""
@@ -144,23 +156,24 @@ function Dash_OnUpdate(Self, Elapsed)
 
             if isGlidingHighSpeed and isGlidingGround then
                 -- Thrill + Skimming -> purple
-                Msg = Msg .. "|cffa335ee" .. SpeedPercent .. "%" .. MainFrame.Divider
+                Msg = Msg .. "|cffa335ee" .. SpeedPercent .. "%"
             elseif isGlidingHighSpeed and not isGlidingGround then
                 -- Thrill -> green
-                Msg = Msg .. "|cff1eff00" .. SpeedPercent .. "%" .. MainFrame.Divider
+                Msg = Msg .. "|cff1eff00" .. SpeedPercent .. "%"
             elseif isGlidingGround and not isGlidingHighSpeed then
                 -- Skimming -> blue
-                Msg = Msg .. "|cff2aa2ff" .. SpeedPercent .. "%" .. MainFrame.Divider
+                Msg = Msg .. "|cff2aa2ff" .. SpeedPercent .. "%"
             elseif isGlidingLowSpeed then
                 -- Stall -> red
-                Msg = Msg .. "|cffff0000" .. SpeedPercent .. "%" .. MainFrame.Divider
+                Msg = Msg .. "|cffff0000" .. SpeedPercent .. "%"
             else
-                Msg = Msg .. SpeedPercent .. "%" .. MainFrame.Divider
+                Msg = Msg .. SpeedPercent .. "%"
             end
+            Msg = Msg .. "(" .. DeltaSpeedPercent .. ")" .. MainFrame.Divider
             -- stop giving color to text
             Msg = Msg .. "|r"
 
-            Msg = Msg .. HeadDeg .. "d"
+            Msg = Msg .. HeadDeg .. "d" .. "(" .. DeltaYaw .. ")" .. MainFrame.Divider
 
             FlightDashText:SetText(Msg)
 

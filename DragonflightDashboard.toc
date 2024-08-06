@@ -2,7 +2,7 @@
 ## Title : Dragonflight dashboard
 ## Notes: Shows your current coordinates, speed, horizontal speed, degrees.
 ## Version: 1
-## Author: quinnfrost
+## Author: quinnfrost, Elektrode (Grizzly Hills / Lothar)
 ## SavedVariablesPerCharacter: DragonDash_Global_Settings
 
-dragonflight-dashboard.lua
+DragonflightDashboard.lua
