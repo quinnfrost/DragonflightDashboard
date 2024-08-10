@@ -114,7 +114,7 @@ function Dash_OnUpdate(Self, Elapsed)
             -- speed flag to display hints of current speed
             local isGlidingGround = isGliding and C_UnitAuras.GetPlayerAuraBySpellID(404184) ~= nil or false
             local isGlidingHighSpeed = isGliding and C_UnitAuras.GetPlayerAuraBySpellID(377234) ~= nil or false
-            local isGlidingLowSpeed = (isGliding and floor(((base / 7) * 100) + .5) < 200) or false
+            local isGlidingLowSpeed = (isGliding and floor(((base / 7) * 100) + .5) < 230) or false
 
             Speed = base or 0 -- get speed
             MapID = C_Map.GetBestMapForUnit("player")
@@ -157,15 +157,15 @@ function Dash_OnUpdate(Self, Elapsed)
             if isGlidingHighSpeed and isGlidingGround then
                 -- Thrill + Skimming -> purple
                 Msg = Msg .. "|cffa335ee" .. SpeedPercent .. "%"
+            elseif isGlidingLowSpeed then
+                -- Stall -> red
+                Msg = Msg .. "|cffff0000" .. SpeedPercent .. "%"
             elseif isGlidingHighSpeed and not isGlidingGround then
                 -- Thrill -> green
                 Msg = Msg .. "|cff1eff00" .. SpeedPercent .. "%"
             elseif isGlidingGround and not isGlidingHighSpeed then
                 -- Skimming -> blue
                 Msg = Msg .. "|cff2aa2ff" .. SpeedPercent .. "%"
-            elseif isGlidingLowSpeed then
-                -- Stall -> red
-                Msg = Msg .. "|cffff0000" .. SpeedPercent .. "%"
             else
                 Msg = Msg .. SpeedPercent .. "%"
             end
