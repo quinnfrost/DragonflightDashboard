@@ -30,9 +30,9 @@ local Font = CreateFont("FlightDashFont")
 local hasInit = false
 local varLoaded = false
 
-local function print(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("FlightDash: " .. tostring(msg))
-end
+-- local function print(msg)
+--     DEFAULT_CHAT_FRAME:AddMessage("FlightDash: " .. tostring(msg))
+-- end
 
 -- tweak frame size according to text
 function Dash_UpdateSize()
@@ -48,7 +48,8 @@ function Dash_InitFrame()
     Font:SetTextColor(0.75, 0.75, 0)
 
     -- setup MainFrame
-    MainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", DragonDash_Global_Settings.Left, DragonDash_Global_Settings.Top)
+    MainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", DragonDash_Global_Settings.Left, DragonDash_Global_Settings
+        .Top)
     -- deprecated in 9.0.1, ref:https://wowpedia.fandom.com/wiki/XML/Backdrop
     -- MainFrame:SetBackdrop({
     --     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -129,26 +130,27 @@ function Dash_OnUpdate(Self, Elapsed)
             HeadRad = GetPlayerFacing("Player") or 0 -- get heading
 
             -- convert all values gathered to alternate units (user friendly data)
-            SpeedPercent = floor(((Speed / 7) * 100) + .5) -- Blizzard measures speeds based on running being 100%.  Running is 7 yards/sec which is Blizzards 100% speed.
+            -- SpeedPercent = floor(((Speed / 7) * 100) + .5) -- Blizzard measures speeds based on running being 100%.  Running is 7 yards/sec which is Blizzards 100% speed.
+            SpeedPercent = ((Speed / 7) * 100) -- Blizzard measures speeds based on running being 100%.  Running is 7 yards/sec which is Blizzards 100% speed.
             HeadDeg = HeadRad * 180 / math.pi              -- radians to degrees
             HeadDeg = 360 - HeadDeg                        -- make clockwise positive instead of counter clockwise
             MapX = PositionX * 100                         -- convert map coordinates to whole numbers 1-100
             MapY = PositionY * 100                         -- convert map coordinates to whole numbers 1-100
 
-            DeltaSpeed = (SpeedPercent - MainFrame.LastSpeed)
+            DeltaSpeed = (SpeedPercent - MainFrame.LastSpeed) / interval
             MainFrame.LastSpeed = SpeedPercent
 
             DeltaYaw = (HeadDeg - MainFrame.LastYaw) / interval
             MainFrame.LastYaw = HeadDeg
 
             --round and pad values
-            SpeedPercent = format("%3.0f", SpeedPercent)
+            SpeedPercent = format("%f", SpeedPercent)
             MapX = format("%5.1f", MapX)
             MapY = format("%5.1f", MapY)
             HeadDeg = format("%3.0f", HeadDeg)
 
-            DeltaSpeedPercent = format("%2d", DeltaSpeed)
-            DeltaYaw = format("%2d", DeltaYaw)
+            DeltaSpeedPercent = format("%f", DeltaSpeed)
+            DeltaYaw = format("%.1f", DeltaYaw)
 
             -- results to display
             local Msg = ""
@@ -225,10 +227,134 @@ function Dash_Command(Msg)
     elseif Msg == 'reset' then
         DragonDash_Global_Settings.Left = 0
         DragonDash_Global_Settings.Top = 0
-        MainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", DragonDash_Global_Settings.Left, DragonDash_Global_Settings.Top)
+        MainFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", DragonDash_Global_Settings.Left,
+            DragonDash_Global_Settings.Top)
+    elseif Msg == 'r' then
+        CenterCamera()
+    elseif Msg == 'l' then
+        Dash_ViewPitch_Level(0.5)
+    elseif Msg == 'ld' then
+        Dash_ViewPitch_Level_Updown(0.5)
+    elseif Msg == 'u' then
+        Dash_ViewPitch_Move_Within(180, 0.1)
+    elseif Msg == 'd' then
+        Dash_ViewPitch_Move_Within(-180, 0.1)
+    elseif Msg == 'l45' then
+        Dash_ViewYaw_Move(-45)
+    elseif Msg == 'r45' then
+        Dash_ViewYaw_Move(45)
+    elseif Msg == 'u45' then
+        Dash_ViewPitch_Move(45)
+    elseif Msg == 'd45' then
+        Dash_ViewPitch_Move(-45)
+    elseif Msg == 'l90' then
+        Dash_ViewYaw_Move(-90)
+    elseif Msg == 'r90' then
+        Dash_ViewYaw_Move(90)
+    elseif Msg == 'u90' then
+        Dash_ViewPitch_Move(90)
+    elseif Msg == 'd90' then
+        Dash_ViewPitch_Move(-90)
+    elseif Msg == 'u10' then
+        Dash_ViewPitch_Move(10)
+    elseif Msg == 'd10' then
+        Dash_ViewPitch_Move(-10)
     else
         print('Unknown option.')
     end
+end
+
+local viewMoveTime = 0.5
+
+function Dash_ViewYaw_Move(dYawDeg)
+    Dash_ViewYaw_Move_Within(dYawDeg, viewMoveTime)
+end
+
+function Dash_ViewPitch_Move(dPitchDeg)
+    Dash_ViewPitch_Move_Within(dPitchDeg, viewMoveTime)
+end
+
+function Dash_ViewYaw_Move_Within(dYawDeg, time)
+    local yawSpeed = tonumber(GetCVar("cameraYawMoveSpeed"))
+    local isYawNegative = dYawDeg < 0
+    dYawSpeed = abs(dYawDeg) / time
+    local startTime = GetTime()
+
+    -- if isYawNegative then
+    --     MoveViewRightStart(dYawDeg / yawSpeed)
+    -- else 
+    --     MoveViewLeftStart(dYawDeg / yawSpeed)
+    -- end
+    local timer = C_Timer.NewTimer(0, function()
+        startTime = GetTime()
+        if isYawNegative then
+            MoveViewRightStart(dYawSpeed / yawSpeed)
+        else
+            MoveViewLeftStart(dYawSpeed / yawSpeed)
+        end
+    end)
+
+    local timer2 = C_Timer.NewTimer(time + 0.005, function()
+        if isYawNegative then
+            MoveViewRightStop()
+        else
+            MoveViewLeftStop()
+        end
+        local elapsed = GetTime() - startTime
+        print("Real:", elapsed * dYawSpeed, "Delta:", elapsed - time)
+    end)
+end
+
+function Dash_ViewPitch_Move_Within(dPitchDeg, time)
+    local pitchSpeed = tonumber(GetCVar("cameraPitchMoveSpeed"))
+    local isPitchNegative = dPitchDeg < 0
+    dPitchSpeed = abs(dPitchDeg) / time
+    local startTime = GetTime()
+
+    -- if isPitchNegative then
+    --     MoveViewUpStart(dPitchDeg / pitchSpeed)
+    -- else
+    --     MoveViewDownStart(dPitchDeg / pitchSpeed)
+    -- end
+    local timer = C_Timer.NewTimer(0, function()
+        startTime = GetTime()
+        if isPitchNegative then
+            MoveViewUpStart(dPitchSpeed / pitchSpeed)
+        else
+            MoveViewDownStart(dPitchSpeed / pitchSpeed)
+        end
+    end)
+
+    local timer2 = C_Timer.NewTimer(time + 0.005, function()
+        if isPitchNegative then
+            MoveViewUpStop()
+        else
+            MoveViewDownStop()
+        end
+        local elapsed = GetTime() - startTime
+        print("Real:", elapsed * dPitchSpeed, "Delta:", elapsed - time)
+    end)
+end
+
+function Dash_ViewPitch_Level(time)
+    local pitchSpeed = tonumber(GetCVar("cameraPitchMoveSpeed")) * time
+
+    MoveViewUpStart(1000)
+    local timer2 = C_Timer.NewTimer(time, function()
+        MoveViewUpStop()
+        Dash_ViewPitch_Move_Within(90, time)
+    end)
+end
+
+function Dash_ViewPitch_Level_Updown(time)
+    local pitchSpeed = tonumber(GetCVar("cameraPitchMoveSpeed")) * time
+
+    MoveViewDownStart(1000)
+    local timer2 = C_Timer.NewTimer(time, function()
+        MoveViewDownStop()
+        Dash_ViewPitch_Move_Within(-90, time)
+    end)
+    
 end
 
 function Dash_OnEvent(Self, Event, ...)
@@ -249,6 +375,6 @@ MainFrame:RegisterEvent("PLAYER_LOGIN")
 MainFrame:RegisterEvent("ADDON_LOADED")
 
 SlashCmdList["FlightDash"] = Dash_Command
-SLASH_FlightDash1 = "/flightdash"
+SLASH_FlightDash1 = "/fl"
 
 print("loaded.")
